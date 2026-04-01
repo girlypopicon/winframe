@@ -1,0 +1,128 @@
+<UserControl x:Class="WinFrame.Views.ChatView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WinFrame.ViewModels"
+             Background="{StaticResource BackgroundBrush}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Messages area -->
+        <ScrollViewer Grid.Row="0"
+                      x:Name="MessagesScrollViewer"
+                      VerticalScrollBarVisibility="Auto"
+                      Style="{StaticResource DarkScrollViewer}"
+                      Padding="0,8">
+            <ItemsControl ItemsSource="{Binding SelectedThread.Messages}"
+                          Margin="16,8">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:MessageViewModel}">
+                        <Grid Margin="0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- User messages on right -->
+                            <Border Grid.Column="1"
+                                    Visibility="{Binding IsUser, Converter={StaticResource BoolToVis}}"
+                                    Background="{StaticResource UserMessageBrush}"
+                                    CornerRadius="12,12,2,12"
+                                    Padding="14,10"
+                                    Margin="16,0,0,0"
+                                    HorizontalAlignment="Right"
+                                    MaxWidth="500">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Content}"
+                                               TextWrapping="Wrap"
+                                               FontSize="13"
+                                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="{Binding TimeDisplay}"
+                                               FontSize="10"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               HorizontalAlignment="Right"
+                                               Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Assistant messages on left -->
+                            <Border Grid.Column="0"
+                                    Visibility="{Binding IsAssistant, Converter={StaticResource BoolToVis}}"
+                                    Background="{StaticResource AssistantMessageBrush}"
+                                    CornerRadius="12,12,12,2"
+                                    Padding="14,10"
+                                    Margin="0,0,16,0"
+                                    HorizontalAlignment="Left"
+                                    MaxWidth="500">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <TextBlock Text="Copilot"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource AccentBrush}"
+                                                   Margin="0,0,6,0"/>
+                                        <TextBlock Text="{Binding TimeDisplay}"
+                                                   FontSize="10"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Content}"
+                                               TextWrapping="Wrap"
+                                               FontSize="13"
+                                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Input area -->
+        <Border Grid.Row="1"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="16,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0"
+                         x:Name="InputBox"
+                         Style="{StaticResource DarkTextBox}"
+                         Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"
+                         AcceptsReturn="False"
+                         MaxLines="1"
+                         FontSize="13"
+                         Margin="0,0,8,0"
+                         KeyDown="InputBox_KeyDown">
+                </TextBox>
+
+                <!-- Send / Cancel button -->
+                <Button Grid.Column="1"
+                        Style="{StaticResource PrimaryButton}"
+                        Command="{Binding SendMessageCommand}"
+                        Visibility="{Binding IsLoading, Converter={StaticResource InverseBoolToVis}}"
+                        Padding="14,10">
+                    <TextBlock Text="Send" FontSize="13"/>
+                </Button>
+
+                <Button Grid.Column="1"
+                        Style="{StaticResource IconButton}"
+                        Command="{Binding CancelCommand}"
+                        Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+                        Padding="14,10"
+                        BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="1">
+                    <TextBlock Text="&#x23F9;" FontSize="13"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

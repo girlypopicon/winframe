@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "CwwFxLt/JHw=",
+  "success": true,
+  "projectFilePath": "/home/runner/work/winframe/winframe/src/WinFrame/WinFrame.csproj",
+  "expectedPackageFiles": [
+    "/home/runner/.nuget/packages/microsoft.extensions.dependencyinjection/9.0.0/microsoft.extensions.dependencyinjection.9.0.0.nupkg.sha512",
+    "/home/runner/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/9.0.0/microsoft.extensions.dependencyinjection.abstractions.9.0.0.nupkg.sha512",
+    "/home/runner/.nuget/packages/microsoft.windowsdesktop.app.ref/9.0.14/microsoft.windowsdesktop.app.ref.9.0.14.nupkg.sha512"
+  ],
+  "logs": []
+}
