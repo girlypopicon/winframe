@@ -18,11 +18,12 @@ public class DeviceFlowResult
     public int Interval { get; set; }
 }
 
-public class GitHubAuthService
+public sealed class GitHubAuthService : IDisposable
 {
     private readonly string _clientId;
     private readonly string _scope;
     private readonly HttpClient _httpClient;
+    private bool _disposed;
 
     public string? AccessToken { get; private set; }
     public GitHubUser? CurrentUser { get; private set; }
@@ -60,7 +61,9 @@ public class GitHubAuthService
         {
             DeviceCode = root.GetProperty("device_code").GetString() ?? string.Empty,
             UserCode = root.GetProperty("user_code").GetString() ?? string.Empty,
-            VerificationUri = root.TryGetProperty("verification_uri", out var uri) ? uri.GetString() ?? "https://github.com/login/device" : "https://github.com/login/device",
+            VerificationUri = root.TryGetProperty("verification_uri", out var uri)
+                ? uri.GetString() ?? "https://github.com/login/device"
+                : "https://github.com/login/device",
             ExpiresIn = root.TryGetProperty("expires_in", out var exp) ? exp.GetInt32() : 900,
             Interval = root.TryGetProperty("interval", out var interval) ? interval.GetInt32() : 5
         };
@@ -118,7 +121,7 @@ public class GitHubAuthService
             }
             catch
             {
-                // network error, continue polling
+                // network error — keep polling
             }
         }
         return false;
@@ -184,5 +187,12 @@ public class GitHubAuthService
         AccessToken = null;
         CurrentUser = null;
         AuthenticationChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _httpClient.Dispose();
     }
 }

@@ -23,6 +23,14 @@ public partial class App : Application
         mainWindow.Show();
     }
 
+    protected override void OnExit(ExitEventArgs e)
+    {
+        // Disposes all IDisposable singletons: GitHubAuthService, CopilotService,
+        // and MainViewModel (which cancels in-flight async operations).
+        Services.Dispose();
+        base.OnExit(e);
+    }
+
     private static void ConfigureServices(IServiceCollection services)
     {
         var configuration = new ConfigurationBuilder()

@@ -72,6 +72,92 @@
                                                TextWrapping="Wrap"
                                                FontSize="13"
                                                Foreground="{StaticResource TextPrimaryBrush}"/>
+
+                                    <!-- Streaming / typing indicator shown while IsStreaming = true.
+                                         DataTrigger enter/exit actions start and stop each storyboard
+                                         so no animation work is done on collapsed/hidden elements. -->
+                                    <StackPanel Orientation="Horizontal"
+                                                Margin="0,6,0,0"
+                                                Visibility="{Binding IsStreaming, Converter={StaticResource BoolToVis}}">
+                                        <Ellipse Width="6" Height="6" Margin="0,0,4,0"
+                                                 Fill="{StaticResource AccentBrush}">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsStreaming}" Value="True">
+                                                            <DataTrigger.EnterActions>
+                                                                <BeginStoryboard x:Name="Dot1Anim">
+                                                                    <Storyboard RepeatBehavior="Forever">
+                                                                        <DoubleAnimation
+                                                                            Storyboard.TargetProperty="Opacity"
+                                                                            From="1" To="0.2"
+                                                                            Duration="0:0:0.6"
+                                                                            AutoReverse="True"
+                                                                            BeginTime="0:0:0"/>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </DataTrigger.EnterActions>
+                                                            <DataTrigger.ExitActions>
+                                                                <StopStoryboard BeginStoryboardName="Dot1Anim"/>
+                                                            </DataTrigger.ExitActions>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                        <Ellipse Width="6" Height="6" Margin="0,0,4,0"
+                                                 Fill="{StaticResource AccentBrush}">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsStreaming}" Value="True">
+                                                            <DataTrigger.EnterActions>
+                                                                <BeginStoryboard x:Name="Dot2Anim">
+                                                                    <Storyboard RepeatBehavior="Forever">
+                                                                        <DoubleAnimation
+                                                                            Storyboard.TargetProperty="Opacity"
+                                                                            From="1" To="0.2"
+                                                                            Duration="0:0:0.6"
+                                                                            AutoReverse="True"
+                                                                            BeginTime="0:0:0.2"/>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </DataTrigger.EnterActions>
+                                                            <DataTrigger.ExitActions>
+                                                                <StopStoryboard BeginStoryboardName="Dot2Anim"/>
+                                                            </DataTrigger.ExitActions>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                        <Ellipse Width="6" Height="6"
+                                                 Fill="{StaticResource AccentBrush}">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsStreaming}" Value="True">
+                                                            <DataTrigger.EnterActions>
+                                                                <BeginStoryboard x:Name="Dot3Anim">
+                                                                    <Storyboard RepeatBehavior="Forever">
+                                                                        <DoubleAnimation
+                                                                            Storyboard.TargetProperty="Opacity"
+                                                                            From="1" To="0.2"
+                                                                            Duration="0:0:0.6"
+                                                                            AutoReverse="True"
+                                                                            BeginTime="0:0:0.4"/>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </DataTrigger.EnterActions>
+                                                            <DataTrigger.ExitActions>
+                                                                <StopStoryboard BeginStoryboardName="Dot3Anim"/>
+                                                            </DataTrigger.ExitActions>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                    </StackPanel>
                                 </StackPanel>
                             </Border>
                         </Grid>
@@ -103,7 +189,7 @@
                          KeyDown="InputBox_KeyDown">
                 </TextBox>
 
-                <!-- Send / Cancel button -->
+                <!-- Send button — visible when not loading -->
                 <Button Grid.Column="1"
                         Style="{StaticResource PrimaryButton}"
                         Command="{Binding SendMessageCommand}"
@@ -112,6 +198,7 @@
                     <TextBlock Text="Send" FontSize="13"/>
                 </Button>
 
+                <!-- Cancel button — visible while loading -->
                 <Button Grid.Column="1"
                         Style="{StaticResource IconButton}"
                         Command="{Binding CancelCommand}"

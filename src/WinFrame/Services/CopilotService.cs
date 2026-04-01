@@ -11,10 +11,11 @@ using WinFrame.Models;
 
 namespace WinFrame.Services;
 
-public class CopilotService
+public sealed class CopilotService : IDisposable
 {
     private readonly HttpClient _httpClient;
     private readonly GitHubAuthService _authService;
+    private bool _disposed;
 
     public CopilotService(GitHubAuthService authService)
     {
@@ -84,38 +85,42 @@ public class CopilotService
 
         if (response == null || !response.IsSuccessStatusCode)
         {
+            response?.Dispose();
             foreach (var token in GetMockResponse())
                 yield return token;
             yield break;
         }
 
-        using var stream = await response.Content.ReadAsStreamAsync(ct);
-        using var reader = new StreamReader(stream);
-
-        while (!reader.EndOfStream && !ct.IsCancellationRequested)
+        using (response)
         {
-            var line = await reader.ReadLineAsync(ct);
-            if (string.IsNullOrWhiteSpace(line)) continue;
-            if (!line.StartsWith("data: ")) continue;
+            using var stream = await response.Content.ReadAsStreamAsync(ct);
+            using var reader = new StreamReader(stream);
 
-            var data = line["data: ".Length..];
-            if (data == "[DONE]") break;
-
-            JsonDocument doc;
-            try { doc = JsonDocument.Parse(data); }
-            catch { continue; }
-
-            using (doc)
+            while (!reader.EndOfStream && !ct.IsCancellationRequested)
             {
-                var root = doc.RootElement;
-                if (!root.TryGetProperty("choices", out var choices)) continue;
-                if (choices.GetArrayLength() == 0) continue;
-                var delta = choices[0];
-                if (!delta.TryGetProperty("delta", out var deltaEl)) continue;
-                if (!deltaEl.TryGetProperty("content", out var contentEl)) continue;
-                var content = contentEl.GetString();
-                if (content != null)
-                    yield return content;
+                var line = await reader.ReadLineAsync(ct);
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                if (!line.StartsWith("data: ")) continue;
+
+                var data = line["data: ".Length..];
+                if (data == "[DONE]") break;
+
+                JsonDocument doc;
+                try { doc = JsonDocument.Parse(data); }
+                catch { continue; }
+
+                using (doc)
+                {
+                    var root = doc.RootElement;
+                    if (!root.TryGetProperty("choices", out var choices)) continue;
+                    if (choices.GetArrayLength() == 0) continue;
+                    var delta = choices[0];
+                    if (!delta.TryGetProperty("delta", out var deltaEl)) continue;
+                    if (!deltaEl.TryGetProperty("content", out var contentEl)) continue;
+                    var content = contentEl.GetString();
+                    if (content != null)
+                        yield return content;
+                }
             }
         }
     }
@@ -125,5 +130,12 @@ public class CopilotService
         var response = customMessage ?? "Hello! I'm WinFrame AI, your coding assistant. I'm ready to help you with coding tasks, answer questions, and assist with your projects. Sign in with GitHub and ensure you have a Copilot subscription to get full AI assistance.\n\nWhat can I help you with today?";
         foreach (var word in response.Split(' '))
             yield return word + " ";
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _httpClient.Dispose();
     }
 }

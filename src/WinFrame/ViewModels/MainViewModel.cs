@@ -9,28 +9,14 @@ using WinFrame.Services;
 
 namespace WinFrame.ViewModels;
 
-public class RelayCommand : ICommand
-{
-    private readonly Action<object?> _execute;
-    private readonly Func<object?, bool>? _canExecute;
-
-    public RelayCommand(Action<object?> execute, Func<object?, bool>? canExecute = null)
-    {
-        _execute = execute;
-        _canExecute = canExecute;
-    }
-
-    public event EventHandler? CanExecuteChanged;
-    public bool CanExecute(object? parameter) => _canExecute?.Invoke(parameter) ?? true;
-    public void Execute(object? parameter) => _execute(parameter);
-    public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-}
-
-public class MainViewModel : BaseViewModel
+public class MainViewModel : BaseViewModel, IDisposable
 {
     private readonly ThreadManager _threadManager;
     private readonly GitHubAuthService _authService;
     private readonly CopilotService _copilotService;
+
+    // Captured once on the UI thread so event callbacks can safely post back.
+    private readonly SynchronizationContext _syncContext;
 
     private ThreadViewModel? _selectedThread;
     private bool _isAuthenticated;
@@ -44,6 +30,8 @@ public class MainViewModel : BaseViewModel
     private string _deviceCode = string.Empty;
     private string _statusMessage = string.Empty;
     private CancellationTokenSource? _loginCts;
+
+    private bool _disposed;
 
     public ObservableCollection<ThreadViewModel> Threads { get; } = new();
     public ThreadViewModel OnboardingThread { get; private set; } = null!;
@@ -78,7 +66,11 @@ public class MainViewModel : BaseViewModel
     public string InputText
     {
         get => _inputText;
-        set => SetProperty(ref _inputText, value);
+        set
+        {
+            if (SetProperty(ref _inputText, value))
+                (SendMessageCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        }
     }
 
     public string StatusText
@@ -119,6 +111,12 @@ public class MainViewModel : BaseViewModel
 
     public MainViewModel(ThreadManager threadManager, GitHubAuthService authService, CopilotService copilotService)
     {
+        // Must be created on the UI thread so the SynchronizationContext is the
+        // WPF dispatcher context, enabling safe marshalling of event callbacks.
+        _syncContext = SynchronizationContext.Current
+            ?? throw new InvalidOperationException(
+                $"{nameof(MainViewModel)} must be created on the UI thread.");
+
         _threadManager = threadManager;
         _authService = authService;
         _copilotService = copilotService;
@@ -161,14 +159,25 @@ public class MainViewModel : BaseViewModel
             }
         }
 
-        _threadManager.ThreadCreated += (_, thread) =>
+        _threadManager.ThreadCreated += OnThreadCreated;
+        _threadManager.ThreadClosed += OnThreadClosed;
+    }
+
+    // Handler stored as a named method so it can be unsubscribed in Dispose().
+    private void OnThreadCreated(object? sender, ConversationThread thread)
+    {
+        _syncContext.Post(_ =>
         {
             var vm = new ThreadViewModel(thread);
             Threads.Add(vm);
             SelectedThread = vm;
-        };
+        }, null);
+    }
 
-        _threadManager.ThreadClosed += (_, id) =>
+    // Handler stored as a named method so it can be unsubscribed in Dispose().
+    private void OnThreadClosed(object? sender, Guid id)
+    {
+        _syncContext.Post(_ =>
         {
             var vm = Threads.FirstOrDefault(t => t.Id == id);
             if (vm != null)
@@ -177,7 +186,7 @@ public class MainViewModel : BaseViewModel
                 if (SelectedThread?.Id == id)
                     SelectedThread = OnboardingThread;
             }
-        };
+        }, null);
     }
 
     private void CreateNewThread()
@@ -212,9 +221,14 @@ public class MainViewModel : BaseViewModel
             IsStreaming = true
         };
         SelectedThread.AddMessage(assistantMessage);
+        // Capture the MessageViewModel for the assistant bubble so we can
+        // update Content and IsStreaming incrementally on the UI thread.
         var assistantVm = SelectedThread.Messages.Last();
 
-        _sendCts = new CancellationTokenSource();
+        // Create a fresh CTS for this send operation.
+        var cts = new CancellationTokenSource();
+        _sendCts = cts;
+
         try
         {
             var thread = _threadManager.GetThread(SelectedThread.Id);
@@ -222,7 +236,7 @@ public class MainViewModel : BaseViewModel
                                            .ToList() ?? new();
             var contextMessages = messages.Where(m => !m.IsStreaming || m.Content.Length > 0).ToList();
 
-            await foreach (var token in _copilotService.SendMessageAsync(contextMessages, _sendCts.Token))
+            await foreach (var token in _copilotService.SendMessageAsync(contextMessages, cts.Token))
             {
                 assistantMessage.Content += token;
                 assistantVm.Content = assistantMessage.Content;
@@ -236,11 +250,16 @@ public class MainViewModel : BaseViewModel
         }
         finally
         {
-            assistantMessage.IsStreaming = false;
+            // Mark streaming as finished on both the model and the view-model so
+            // any IsStreaming binding updates correctly.
+            assistantVm.IsStreaming = false;
             IsLoading = false;
             StatusText = string.Empty;
-            _sendCts?.Dispose();
+
+            // Null out _sendCts before disposing so CancelSend() cannot call
+            // Cancel() on an already-disposed instance.
             _sendCts = null;
+            cts.Dispose();
         }
     }
 
@@ -264,7 +283,7 @@ public class MainViewModel : BaseViewModel
             DeviceCode = result.UserCode;
             StatusMessage = "Waiting for authorization...";
 
-            // Open browser
+            // Open the browser so the user can complete the device flow.
             try
             {
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
@@ -273,7 +292,7 @@ public class MainViewModel : BaseViewModel
                     UseShellExecute = true
                 });
             }
-            catch { }
+            catch { /* browser launch is best-effort */ }
 
             var success = await _authService.PollForTokenAsync(
                 result.DeviceCode, result.Interval, _loginCts.Token);
@@ -313,8 +332,26 @@ public class MainViewModel : BaseViewModel
         IsAuthenticated = _authService.IsAuthenticated;
         OnPropertyChanged(nameof(CurrentUser));
         if (IsAuthenticated)
-        {
             IsDeviceFlowActive = false;
-        }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+
+        // Unsubscribe all event handlers to prevent memory/reference leaks.
+        _authService.AuthenticationChanged -= OnAuthenticationChanged;
+        _threadManager.ThreadCreated -= OnThreadCreated;
+        _threadManager.ThreadClosed -= OnThreadClosed;
+
+        // Cancel and clean up any in-flight async operations.
+        _sendCts?.Cancel();
+        _sendCts?.Dispose();
+        _sendCts = null;
+
+        _loginCts?.Cancel();
+        _loginCts?.Dispose();
+        _loginCts = null;
     }
 }
