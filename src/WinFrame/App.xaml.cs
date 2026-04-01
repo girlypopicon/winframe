@@ -1,4 +1,6 @@
+using System.IO;
 using System.Windows;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WinFrame.Services;
 using WinFrame.ViewModels;
@@ -23,6 +25,12 @@ public partial class App : Application
 
     private static void ConfigureServices(IServiceCollection services)
     {
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .Build();
+
+        services.AddSingleton<IConfiguration>(configuration);
         services.AddSingleton<GitHubAuthService>();
         services.AddSingleton<ThreadManager>();
         services.AddSingleton<SchedulerService>();

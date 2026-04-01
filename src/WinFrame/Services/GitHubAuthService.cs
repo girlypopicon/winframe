@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using WinFrame.Models;
 
 namespace WinFrame.Services;
@@ -19,8 +20,8 @@ public class DeviceFlowResult
 
 public class GitHubAuthService
 {
-    private const string ClientId = "Ov23liXXXXXXXXXXXXXX";
-    private const string Scope = "read:user copilot";
+    private readonly string _clientId;
+    private readonly string _scope;
     private readonly HttpClient _httpClient;
 
     public string? AccessToken { get; private set; }
@@ -29,8 +30,10 @@ public class GitHubAuthService
 
     public event EventHandler? AuthenticationChanged;
 
-    public GitHubAuthService()
+    public GitHubAuthService(IConfiguration configuration)
     {
+        _clientId = configuration["GitHub:ClientId"] ?? "Ov23liXXXXXXXXXXXXXX";
+        _scope = configuration["GitHub:Scope"] ?? "read:user copilot";
         _httpClient = new HttpClient();
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "WinFrame/1.0");
@@ -40,8 +43,8 @@ public class GitHubAuthService
     {
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            ["client_id"] = ClientId,
-            ["scope"] = Scope
+            ["client_id"] = _clientId,
+            ["scope"] = _scope
         });
 
         var response = await _httpClient.PostAsync(
@@ -69,7 +72,7 @@ public class GitHubAuthService
 
             var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                ["client_id"] = ClientId,
+                ["client_id"] = _clientId,
                 ["device_code"] = deviceCode,
                 ["grant_type"] = "urn:ietf:params:oauth:grant-type:device_code"
             });
