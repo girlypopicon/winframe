@@ -107,7 +107,7 @@
     ]
   },
   "packageFolders": {
-    "/home/runner/.nuget/packages/": {}
+    "/tmp/codeql-scratch-6a05d4598a2bc85f/dbs/csharp/working/packages": {}
   },
   "project": {
     "version": "1.0.0",
@@ -115,7 +115,7 @@
       "projectUniqueName": "/home/runner/work/winframe/winframe/src/WinFrame/WinFrame.csproj",
       "projectName": "WinFrame",
       "projectPath": "/home/runner/work/winframe/winframe/src/WinFrame/WinFrame.csproj",
-      "packagesPath": "/home/runner/.nuget/packages/",
+      "packagesPath": "/tmp/codeql-scratch-6a05d4598a2bc85f/dbs/csharp/working/packages",
       "outputPath": "/home/runner/work/winframe/winframe/src/WinFrame/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
@@ -166,6 +166,18 @@
         "assetTargetFallback": true,
         "warn": true,
         "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[9.0.14, 9.0.14]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Host.linux-x64",
+            "version": "[9.0.14, 9.0.14]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Ref",
+            "version": "[9.0.14, 9.0.14]"
+          },
           {
             "name": "Microsoft.WindowsDesktop.App.Ref",
             "version": "[9.0.14, 9.0.14]"

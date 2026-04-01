@@ -1,12 +1,15 @@
 {
   "version": 2,
-  "dgSpecHash": "CwwFxLt/JHw=",
+  "dgSpecHash": "Hv+f1tAPo9k=",
   "success": true,
   "projectFilePath": "/home/runner/work/winframe/winframe/src/WinFrame/WinFrame.csproj",
   "expectedPackageFiles": [
-    "/home/runner/.nuget/packages/microsoft.extensions.dependencyinjection/9.0.0/microsoft.extensions.dependencyinjection.9.0.0.nupkg.sha512",
-    "/home/runner/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/9.0.0/microsoft.extensions.dependencyinjection.abstractions.9.0.0.nupkg.sha512",
-    "/home/runner/.nuget/packages/microsoft.windowsdesktop.app.ref/9.0.14/microsoft.windowsdesktop.app.ref.9.0.14.nupkg.sha512"
+    "/tmp/codeql-scratch-6a05d4598a2bc85f/dbs/csharp/working/packages/microsoft.extensions.dependencyinjection/9.0.0/microsoft.extensions.dependencyinjection.9.0.0.nupkg.sha512",
+    "/tmp/codeql-scratch-6a05d4598a2bc85f/dbs/csharp/working/packages/microsoft.extensions.dependencyinjection.abstractions/9.0.0/microsoft.extensions.dependencyinjection.abstractions.9.0.0.nupkg.sha512",
+    "/tmp/codeql-scratch-6a05d4598a2bc85f/dbs/csharp/working/packages/microsoft.netcore.app.ref/9.0.14/microsoft.netcore.app.ref.9.0.14.nupkg.sha512",
+    "/tmp/codeql-scratch-6a05d4598a2bc85f/dbs/csharp/working/packages/microsoft.windowsdesktop.app.ref/9.0.14/microsoft.windowsdesktop.app.ref.9.0.14.nupkg.sha512",
+    "/tmp/codeql-scratch-6a05d4598a2bc85f/dbs/csharp/working/packages/microsoft.aspnetcore.app.ref/9.0.14/microsoft.aspnetcore.app.ref.9.0.14.nupkg.sha512",
+    "/tmp/codeql-scratch-6a05d4598a2bc85f/dbs/csharp/working/packages/microsoft.netcore.app.host.linux-x64/9.0.14/microsoft.netcore.app.host.linux-x64.9.0.14.nupkg.sha512"
   ],
   "logs": []
 }
