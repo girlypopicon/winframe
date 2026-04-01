@@ -12,8 +12,7 @@ public partial class ChatView : UserControl
 
     private void InputBox_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter && !e.KeyboardDevice.IsKeyDown(Key.LeftShift)
-            && !e.KeyboardDevice.IsKeyDown(Key.RightShift))
+        if (e.Key == Key.Enter)
         {
             if (DataContext is WinFrame.ViewModels.MainViewModel vm)
             {

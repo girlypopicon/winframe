@@ -77,7 +77,10 @@ public class CopilotService
             response = await _httpClient.SendAsync(request,
                 HttpCompletionOption.ResponseHeadersRead, ct);
         }
-        catch { }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            // Network error — fall back to mock response
+        }
 
         if (response == null || !response.IsSuccessStatusCode)
         {

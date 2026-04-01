@@ -32,7 +32,9 @@ public class GitHubAuthService
 
     public GitHubAuthService(IConfiguration configuration)
     {
-        _clientId = configuration["GitHub:ClientId"] ?? "Ov23liXXXXXXXXXXXXXX";
+        _clientId = configuration["GitHub:ClientId"]
+            ?? throw new InvalidOperationException(
+                "GitHub:ClientId is not configured. Set it in appsettings.json or environment variables.");
         _scope = configuration["GitHub:Scope"] ?? "read:user copilot";
         _httpClient = new HttpClient();
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
