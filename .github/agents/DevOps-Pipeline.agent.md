@@ -6,7 +6,6 @@
 
 name: DevOps Pipeline
 description: Designs CI/CD pipelines, Dockerfiles, Kubernetes manifests, and infrastructure-as-code with security and reliability baked in. 
-DevOps Pipeline 
 ---
 
 # My Agent
