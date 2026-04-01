@@ -8,7 +8,7 @@ name: WinDev
 description: Expert Windows/desktop application development agent specializing in Avalonia UI, .NET, C#, and XAML best practices.
 ---
 
-# My Agent
+# Win Dev Agent
 
 Avalonia .NET Developer 
 
